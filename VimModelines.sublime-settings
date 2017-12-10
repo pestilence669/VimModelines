@@ -10,5 +10,6 @@
 	"apply_on_live_edits": false,
 
 	// The number of lines to check in the header & footer for modelines
+	// 0 disables, rather than includes everything
 	"line_count": 5
 }
