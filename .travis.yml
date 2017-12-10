@@ -2,6 +2,7 @@ env:
     global:
         - PACKAGE="VimModelines" # Package name
         - SUBLIME_TEXT_VERSION="3"
+        - CODACY_PROJECT_TOKEN="40b5287cd76446c18191636b2e83f313"
         # use UNITTESTING_TAG to specific tag of UnitTesting
         # - UNITTESTING_TAG="master"
 
@@ -25,24 +26,24 @@ before_install:
       fi
 
 install:
-    # bootstrap the testing environment
     - sh travis.sh bootstrap
-    # install Package Control and package denepdencies
-    # - sh travis.sh install_package_control
 
 script:
-    # run tests with test coverage report
     - sh travis.sh run_tests --coverage
-    # testing syntax_test files
-    # - sh travis.sh run_syntax_tests
 
 after_success:
-    - pip install codecov;
+    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+            brew update;
+            brew install python3;
+            pip3 install codecov;
+            pip3 install coverage codacy-coverage;
+      fi
+    - if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+            pip install codecov coverage codacy-coverage;
+      fi
     - codecov
-    - pip install coverage codacy-coverage
     - coverage xml -o coverage.xml
     - python-codacy-coverage
-    # - coveralls
 
 notifications:
     email: false
