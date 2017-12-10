@@ -1,0 +1,3 @@
+// vim: set ts=19:
+
+TO TEST PLUGIN ACTIVATION ON LOAD

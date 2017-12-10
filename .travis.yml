@@ -1,0 +1,49 @@
+env:
+    global:
+        - PACKAGE="VimModelines" # Package name
+        - SUBLIME_TEXT_VERSION="3"
+        - CODACY_PROJECT_TOKEN="40b5287cd76446c18191636b2e83f313"
+        # use UNITTESTING_TAG to specific tag of UnitTesting
+        # - UNITTESTING_TAG="master"
+
+# mutliple os matrix
+# https://docs.travis-ci.com/user/multi-os/#Python-example-(unsupported-languages)
+matrix:
+    include:
+        - os: linux
+          language: python
+          python: 3.3
+        - os: osx
+          language: generic
+
+
+before_install:
+    - curl -OL https://raw.githubusercontent.com/randy3k/UnitTesting/master/sbin/travis.sh
+    # enable gui, see https://docs.travis-ci.com/user/gui-and-headless-browsers
+    - if [ "$TRAVIS_OS_NAME" == "linux"  ]; then
+            export DISPLAY=:99.0;
+            sh -e /etc/init.d/xvfb start;
+      fi
+
+install:
+    - sh travis.sh bootstrap
+
+script:
+    - sh travis.sh run_tests --coverage
+
+after_success:
+    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+            brew update;
+            brew install python3;
+            pip3 install codecov;
+            pip3 install coverage codacy-coverage;
+      fi
+    - if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+            pip install codecov coverage codacy-coverage;
+      fi
+    - codecov
+    - coverage xml -o coverage.xml
+    - python-codacy-coverage
+
+notifications:
+    email: false

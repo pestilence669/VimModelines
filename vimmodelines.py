@@ -8,7 +8,6 @@ License: MIT
 from __future__ import print_function
 import sublime
 import sublime_plugin
-import os
 import re
 import sys
 
@@ -110,13 +109,14 @@ class VimModelines(sublime_plugin.EventListener):
         if not line_count:
             return lines
 
-        header_region = sublime.Region(0, view.text_point(line_count, 0))
+        # add +1, because the intersection test in non-inclusive
+        header_region = sublime.Region(0, view.text_point(line_count, 0) + 1)
 
         max_line = view.rowcol(view.size())[0] + 1
         ftr_line = max(line_count, max_line - line_count)
         if max_line - line_count > 0:
             footer_region = sublime.Region(view.text_point(ftr_line, 0),
-                                           view.size())
+                                           view.size() + 1)  # see above
         else:
             footer_region = None
 
