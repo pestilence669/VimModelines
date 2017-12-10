@@ -1,0 +1,14 @@
+// vim: set ts=2 sw=2 noet:
+{
+	// Apply modelines on file open
+	"apply_on_load": true,
+
+	// Apply modelines on file save
+	"apply_on_save": true,
+
+	// Apply modelines live, when editing (neat, but not the most efficient)
+	"apply_on_live_edits": false,
+
+	// The number of lines to check in the header & footer for modelines
+	"line_count": 5
+}

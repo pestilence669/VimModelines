@@ -1,0 +1,46 @@
+// vim: set ts=2 sw=2 noet:
+[
+	{
+		"caption": "Preferences",
+		"mnemonic": "n",
+		"id": "preferences",
+		"children":
+		[
+			{
+				"caption": "Package Settings",
+				"mnemonic": "P",
+				"id": "package-settings",
+				"children":
+				[
+					{
+						"caption": "VimModelines",
+						"children":
+						[
+							{
+								"command": "edit_settings",
+								"args": {
+									"base_file": "${packages}/VimModelines/VimModelines.sublime-settings",
+									"default": "// VimModeline Settings - User\n{\n\t$0\n}\n"
+								},
+								"caption": "Settings"
+							},
+							{
+								"caption": "-"
+							},
+							{
+								"command": "open_file",
+								"args": {"file": "${packages}/VimModelines/VimModelines.sublime-settings"},
+								"caption": "Settings – Default"
+							},
+							{
+								"command": "open_file",
+								"args": {"file": "${packages}/User/VimModelines.sublime-settings"},
+								"caption": "Settings – User"
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+]
