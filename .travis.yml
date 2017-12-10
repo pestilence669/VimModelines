@@ -37,19 +37,12 @@ script:
     # - sh travis.sh run_syntax_tests
 
 after_success:
-    # remove the following if `coveralls` is not needed
-    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-            brew update;
-            brew install python3;
-            pip3 install python-coveralls;
-            pip3 install codecov;
-      fi
-    - if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-            pip install python-coveralls;
-            pip install codecov;
-      fi
-    - coveralls
+    - pip install codecov;
     - codecov
+    - pip install coverage codacy-coverage
+    - coverage xml -o coverage.xml
+    - python-codacy-coverage
+    # - coveralls
 
 notifications:
     email: false
