@@ -1,3 +1,4 @@
 tests/ export-ignore
 unittesting.json export-ignore
 VimModelines.sublime-project export-ignore
+.travis.yml
