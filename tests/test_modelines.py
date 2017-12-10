@@ -2,10 +2,8 @@
 # vim: set ts=4 sw=4 et fileencoding=utf-8:
 
 from os import path
-from unittest import TestCase
 from unittesting import DeferrableTestCase
 import sublime
-import sys
 
 
 version = sublime.version()
