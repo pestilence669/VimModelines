@@ -6,9 +6,6 @@
 	// Apply modelines on file save
 	"apply_on_save": true,
 
-	// Apply modelines live, when editing (neat, but not the most efficient)
-	"apply_on_live_edits": false,
-
 	// The number of lines to check in the header & footer for modelines
 	// 0 disables, rather than includes everything
 	"line_count": 5
