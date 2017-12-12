@@ -35,6 +35,34 @@ class VimModelines(sublime_plugin.EventListener):
     '''Plugin entry point'''
 
     def __init__(self):
+        self.__settings = None
+
+    @property
+    def settings(self):
+        '''plugin settings, lazy loading for API readiness'''
+        if self.__settings is None:
+            self.__settings = sublime.load_settings(SETTINGS_FILE)
+        return self.__settings
+
+    def description(self):
+        return __doc__.split('\n')[0]
+
+    def on_load(self, view):
+        if self.settings.get('apply_on_load', False):
+            view.window().run_command('vim_modelines_apply')
+
+    def on_post_save(self, view):
+        if self.settings.get('apply_on_save', False):
+            view.window().run_command('vim_modelines_apply')
+
+###############################################################################
+
+
+class VimModelinesApplyCommand(sublime_plugin.WindowCommand):
+    '''Plugin main logic'''
+
+    def __init__(self, window):
+        super().__init__(window)
         self.modeline_RX = re.compile('vim(?:\d*):\s*(?:set)?\s*(.*)$')
         self.attr_sep_RX = re.compile('[: ]')
         self.attr_kvp_RX = re.compile('([^=]+)=?([^=]*)')
@@ -51,27 +79,15 @@ class VimModelines(sublime_plugin.EventListener):
     def description(self):
         return __doc__.split('\n')[0]
 
-    def on_load(self, view):
-        if self.settings.get('apply_on_load', False):
-            self.apply_modelines(view)
-
-    def on_post_save(self, view):
-        if self.settings.get('apply_on_save', False):
-            self.apply_modelines(view)
-
-    def on_modified_async(self, view):
-        if self.settings.get('apply_on_live_edits', False):
-            self.apply_modelines(view, live=True)
-
     ###########################################################################
 
-    def apply_modelines(self, view, live=False):
+    def run(self):
+        view = self.window.active_view()
         if view.is_scratch():
             return
 
         attrs = filter(None.__ne__, map(self.parse_for_modeline,
-                                        self.get_header_and_footer(view,
-                                                                   live)))
+                                        self.get_header_and_footer(view)))
 
         for line in attrs:
             for attr, value in line:
@@ -101,7 +117,7 @@ class VimModelines(sublime_plugin.EventListener):
                 elif attr in ('nonumber', 'nonu'):
                     view.settings().set('line_numbers', False)
 
-    def get_header_and_footer(self, view, live=False):
+    def get_header_and_footer(self, view):
         line_count = self.settings.get('line_count', 0)
 
         lines = []
@@ -109,26 +125,19 @@ class VimModelines(sublime_plugin.EventListener):
         if not line_count:
             return lines
 
-        # add +1, because the intersection test in non-inclusive
-        header_region = sublime.Region(0, view.text_point(line_count, 0) + 1)
+        header_region = sublime.Region(0, view.text_point(line_count, 0))
 
         max_line = view.rowcol(view.size())[0] + 1
         ftr_line = max(line_count, max_line - line_count)
         if max_line - line_count > 0:
             footer_region = sublime.Region(view.text_point(ftr_line, 0),
-                                           view.size() + 1)  # see above
+                                           view.size())
         else:
             footer_region = None
 
-        in_header = header_region and any(header_region.intersects(r)
-                                          for r in view.selection)
-        in_footer = footer_region and any(footer_region.intersects(r)
-                                          for r in view.selection)
-
-        if not live or in_header or in_footer:
-            lines += view.lines(header_region)
-            if footer_region:
-                lines += view.lines(footer_region)
+        lines += view.lines(header_region)
+        if footer_region:
+            lines += view.lines(footer_region)
 
         return [view.substr(region) for region in lines]
 
