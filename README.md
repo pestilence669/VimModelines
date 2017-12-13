@@ -6,11 +6,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/0a3635083d0b4ddd99383406b4a18d41)](https://www.codacy.com/app/pestilence669/VimModelines?utm_source=github.com&utm_medium=referral&utm_content=pestilence669/VimModelines&utm_campaign=Badge_Coverage)
 [![codecov](https://codecov.io/gh/pestilence669/VimModelines/branch/master/graph/badge.svg)](https://codecov.io/gh/pestilence669/VimModelines)
 
-<div align="center">
-
 ![Screenshot 2](img/ss2.gif)
-
-</div>
 
 VimModelines adds [Vim](http://www.vim.org/) modeline support into
 [Sublime Text](https://www.sublimetext.com/) 3 for common settings. Modelines
