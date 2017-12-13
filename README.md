@@ -5,6 +5,7 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/0a3635083d0b4ddd99383406b4a18d41)](https://www.codacy.com/app/pestilence669/VimModelines?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pestilence669/VimModelines&amp;utm_campaign=Badge_Grade)
 [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/0a3635083d0b4ddd99383406b4a18d41)](https://www.codacy.com/app/pestilence669/VimModelines?utm_source=github.com&utm_medium=referral&utm_content=pestilence669/VimModelines&utm_campaign=Badge_Coverage)
 [![codecov](https://codecov.io/gh/pestilence669/VimModelines/branch/master/graph/badge.svg)](https://codecov.io/gh/pestilence669/VimModelines)
+<a href="https://packagecontrol.io/packages/VimModelines"><img src="https://packagecontrol.herokuapp.com/downloads/VimModelines.svg"></a>
 
 ![Screenshot 2](img/ss2.gif)
 
