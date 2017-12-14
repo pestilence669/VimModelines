@@ -2,12 +2,12 @@
 '''Parse and apply Vim modelines
 
 GitHub: https://github.com/pestilence669/VimModelines
-License: MIT
 '''
 
+from itertools import chain
+import re
 import sublime
 import sublime_plugin
-import re
 import sys
 
 
@@ -18,9 +18,8 @@ SETTINGS_FILE = 'VimModelines.sublime-settings'
 def plugin_loaded():
     print('Loaded {}'.format(PLUGIN_NAME))
 
-    # to handle the async loading of plugins
-    _mod = sys.modules[__name__]
-    listener = _mod.plugins[0]
+    # call on_load(), since files will probably load before the plugin (async)
+    listener = sys.modules[__name__].plugins[0]
     for w in sublime.windows():
         for g in range(w.num_groups()):
             listener.on_load(w.active_view_in_group(g))
@@ -31,7 +30,7 @@ def plugin_unloaded():
 
 
 class VimModelines(sublime_plugin.EventListener):
-    '''Plugin entry point'''
+    '''Event listener to invoke the command on load & save'''
 
     def __init__(self):
         self.__settings = None
@@ -58,14 +57,14 @@ class VimModelines(sublime_plugin.EventListener):
 
 
 class VimModelinesApplyCommand(sublime_plugin.WindowCommand):
-    '''Plugin main logic'''
+    '''Command containing the main logic'''
+
+    __modeline_RX = re.compile('vim(?:\d*):\s*(?:set)?\s*(.*)$')
+    __attr_sep_RX = re.compile('[: ]')
+    __attr_kvp_RX = re.compile('([^=]+)=?([^=]*)')
 
     def __init__(self, window):
         super().__init__(window)
-        self.modeline_RX = re.compile('vim(?:\d*):\s*(?:set)?\s*(.*)$')
-        self.attr_sep_RX = re.compile('[: ]')
-        self.attr_kvp_RX = re.compile('([^=]+)=?([^=]*)')
-
         self.__settings = None
 
     @property
@@ -85,70 +84,67 @@ class VimModelinesApplyCommand(sublime_plugin.WindowCommand):
         if view.is_scratch():
             return
 
-        attrs = filter(None.__ne__, map(self.parse_for_modeline,
-                                        self.get_header_and_footer(view)))
-
-        for line in attrs:
-            for attr, value in line:
-                if attr in ('tabstop', 'ts') and value.isdigit():
-                    view.settings().set('tab_size', int(value))
-                elif attr in ('expandtab', 'et'):
-                    view.settings().set('translate_tabs_to_spaces', True)
-                elif attr in ('noexpandtab', 'noet'):
-                    view.settings().set('translate_tabs_to_spaces', False)
-                elif attr in ('autoindent', 'ai'):
-                    view.settings().set('auto_indent', True)
-                elif attr in ('noautoindent', 'noai'):
-                    view.settings().set('auto_indent', False)
-                elif attr in ('fileformat', 'ff'):
-                    if value == 'dos':
-                        view.set_line_endings('windows')
-                    if value == 'unix':
-                        view.set_line_endings('unix')
-                    if value == 'mac':
-                        view.set_line_endings('CR')
-                elif attr == 'wrap':
-                    view.settings().set('word_wrap', True)
-                elif attr == 'nowrap':
-                    view.settings().set('word_wrap', False)
-                elif attr in ('number', 'nu'):
-                    view.settings().set('line_numbers', True)
-                elif attr in ('nonumber', 'nonu'):
-                    view.settings().set('line_numbers', False)
-
-    def get_header_and_footer(self, view):
         line_count = self.settings.get('line_count', 0)
 
-        lines = []
+        # flatten each command or key/value pair and only keep the most recent
+        attrs = dict(chain(*filter(None.__ne__,
+                                   map(self.parse_for_modeline,
+                                       self.header_and_footer(view,
+                                                              line_count)))))
 
+        for attr, value in attrs.items():
+            if attr in ('tabstop', 'ts') and value.isdigit():
+                view.settings().set('tab_size', int(value))
+            elif attr in ('expandtab', 'et'):
+                view.settings().set('translate_tabs_to_spaces', True)
+            elif attr in ('noexpandtab', 'noet'):
+                view.settings().set('translate_tabs_to_spaces', False)
+            elif attr in ('autoindent', 'ai'):
+                view.settings().set('auto_indent', True)
+            elif attr in ('noautoindent', 'noai'):
+                view.settings().set('auto_indent', False)
+            elif attr in ('fileformat', 'ff'):
+                if value == 'dos':
+                    view.set_line_endings('windows')
+                if value == 'unix':
+                    view.set_line_endings('unix')
+                if value == 'mac':
+                    view.set_line_endings('CR')
+            elif attr == 'wrap':
+                view.settings().set('word_wrap', True)
+            elif attr == 'nowrap':
+                view.settings().set('word_wrap', False)
+            elif attr in ('number', 'nu'):
+                view.settings().set('line_numbers', True)
+            elif attr in ('nonumber', 'nonu'):
+                view.settings().set('line_numbers', False)
+
+    @staticmethod
+    def header_and_footer(view, line_count):
         if not line_count:
-            return lines
+            return []
 
-        header_region = sublime.Region(0, view.text_point(line_count, 0))
+        # header
+        lines = view.lines(sublime.Region(0, view.text_point(line_count, 0)))
 
+        # footer
         max_line = view.rowcol(view.size())[0] + 1
         ftr_line = max(line_count, max_line - line_count)
         if max_line - line_count > 0:
-            footer_region = sublime.Region(view.text_point(ftr_line, 0),
-                                           view.size())
-        else:
-            footer_region = None
+            lines += view.lines(sublime.Region(view.text_point(ftr_line, 0),
+                                               view.size()))
 
-        lines += view.lines(header_region)
-        if footer_region:
-            lines += view.lines(footer_region)
+        return map(view.substr, lines)
 
-        return [view.substr(region) for region in lines]
+    @classmethod
+    def parse_for_modeline(cls, line):
+        '''Parse for each command or key/value pair if valid'''
+        match = cls.__modeline_RX.search(line)
 
-    def parse_for_modeline(self, line):
-        match = self.modeline_RX.search(line)
-
-        if not match:
-            return None
-        else:
+        if match:
             modeline, = match.groups()
-            attrs = [self.attr_kvp_RX.match(attr).groups()
+            attrs = [cls.__attr_kvp_RX.match(attr).groups()
                      for attr in filter(bool,
-                                        self.attr_sep_RX.split(modeline))]
+                                        cls.__attr_sep_RX.split(modeline))]
 
             return attrs
