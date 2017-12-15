@@ -169,8 +169,6 @@ class TestVimModelines(DeferrableTestCase):
                      for i in range(self.line_count * 2 + 1,
                                     self.line_count * 3 + 1))
 
-        current_tab_size = self.view.settings().get('tab_size')
-
         self.setText('\n'.join(lines))
         self.apply()
         self.assertNotEqual(19, self.view.settings().get('tab_size'))
@@ -182,8 +180,6 @@ class TestVimModelines(DeferrableTestCase):
         lines.extend('Line #{}'.format(i)
                      for i in range(self.line_count + 2,
                                     self.line_count * 3 + 1))
-
-        current_tab_size = self.view.settings().get('tab_size')
 
         self.setText('\n'.join(lines))
         self.apply()
