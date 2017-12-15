@@ -65,10 +65,16 @@ class TestVimModelines(DeferrableTestCase):
 
     ###########################################################################
 
-    def test_initial_settings_are_sane(self):
+    def test_initial_view_settings_are_sane(self):
         '''Ensure tab_size isn't suggestively invalid at 19 or 79'''
         self.assertNotEqual(19, self.view.settings().get('tab_size'))
         self.assertNotEqual(79, self.view.settings().get('tab_size'))
+
+    def test_default_plugin_settings(self):
+        '''Ensure that the defaults are read from the config'''
+        self.assertTrue(self.view.settings().get('apply_on_load'))
+        self.assertTrue(self.view.settings().get('apply_on_save'))
+        self.assertEqual(5, self.view.settings().get('line_count'))
 
     def test_setting_tab_size(self):
         self.setText('# vim: set ts=19:')
@@ -130,8 +136,6 @@ class TestVimModelines(DeferrableTestCase):
         self.assertEqual(19, self.view.settings().get('tab_size'))
 
     def test_header_at_edge_of_bounds(self):
-        self.settings.set('apply_on_live_edits', True)
-
         lines = ['Line #{}\n'.format(i)
                  for i in range(1, self.line_count)]
         lines.append('# vim: set ts=19:')
@@ -141,8 +145,6 @@ class TestVimModelines(DeferrableTestCase):
         self.assertEqual(19, self.view.settings().get('tab_size'))
 
     def test_footer_at_end_of_bounds(self):
-        self.settings.set('apply_on_live_edits', True)
-
         lines = ['Line #{}\n'.format(i)
                  for i in range(1, self.line_count * 3)]
         lines.append('# vim: set ts=19:')
@@ -152,8 +154,6 @@ class TestVimModelines(DeferrableTestCase):
         self.assertEqual(19, self.view.settings().get('tab_size'))
 
     def test_footer_at_edge_of_bounds(self):
-        self.settings.set('apply_on_live_edits', True)
-
         lines = ['Line #{}'.format(i)
                  for i in range(1, self.line_count * 2)]
 
@@ -168,8 +168,6 @@ class TestVimModelines(DeferrableTestCase):
         self.assertEqual(19, self.view.settings().get('tab_size'))
 
     def test_footer_out_of_bounds(self):
-        self.settings.set('apply_on_live_edits', True)
-
         lines = ['Line #{}'.format(i)
                  for i in range(1, self.line_count * 2)]
         lines.append('# vim: set ts=19:')
@@ -184,8 +182,6 @@ class TestVimModelines(DeferrableTestCase):
         self.assertNotEqual(19, self.view.settings().get('tab_size'))
 
     def test_header_out_of_bounds(self):
-        self.settings.set('apply_on_live_edits', True)
-
         lines = ['Line #{}'.format(i)
                  for i in range(1, self.line_count + 1)]
         lines.append('vim: set ts=19')
