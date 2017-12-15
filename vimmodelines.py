@@ -46,11 +46,11 @@ class VimModelines(sublime_plugin.EventListener):
         return __doc__.split('\n')[0]
 
     def on_load(self, view):
-        if self.settings.get('apply_on_load', False):
+        if self.settings.get('apply_on_load', True):
             view.window().run_command('vim_modelines_apply')
 
     def on_post_save(self, view):
-        if self.settings.get('apply_on_save', False):
+        if self.settings.get('apply_on_save', True):
             view.window().run_command('vim_modelines_apply')
 
 ###############################################################################
