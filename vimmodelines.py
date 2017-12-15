@@ -84,7 +84,7 @@ class VimModelinesApplyCommand(sublime_plugin.WindowCommand):
         if view.is_scratch():
             return
 
-        line_count = self.settings.get('line_count', 0)
+        line_count = self.settings.get('line_count', 5)
 
         # flatten each command or key/value pair and only keep the most recent
         attrs = dict(chain(*filter(None.__ne__,

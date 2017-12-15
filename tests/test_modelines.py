@@ -70,12 +70,6 @@ class TestVimModelines(DeferrableTestCase):
         self.assertNotEqual(19, self.view.settings().get('tab_size'))
         self.assertNotEqual(79, self.view.settings().get('tab_size'))
 
-    def test_default_plugin_settings(self):
-        '''Ensure that the defaults are read from the config'''
-        self.assertTrue(self.view.settings().get('apply_on_load'))
-        self.assertTrue(self.view.settings().get('apply_on_save'))
-        self.assertEqual(5, self.view.settings().get('line_count'))
-
     def test_setting_tab_size(self):
         self.setText('# vim: set ts=19:')
         self.apply()
