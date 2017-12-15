@@ -1,0 +1,8 @@
+[run]
+	omit = /*/tests/*
+	branch = False
+	concurrency = thread
+
+[report]
+	ignore_errors = True
+	show_missing = True
