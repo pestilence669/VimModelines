@@ -1,3 +1,4 @@
 {
-    "deferred": true
+    "deferred": true,
+    "verbosity": 2
 }
