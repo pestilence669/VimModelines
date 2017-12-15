@@ -23,8 +23,8 @@ class TestVimModelines(DeferrableTestCase):
         # save current settings
         self.settings = sublime.load_settings(self.SETTINGS_FILE)
         self.line_count = self.settings.get('line_count')
-        self.apply_on_live_edits = self.settings.get('apply_on_live_edits')
-        self.apply_on_load = self.settings.get('apply_on_live_edits')
+        self.apply_on_load = self.settings.get('apply_on_load')
+        self.apply_on_save = self.settings.get('apply_on_save')
 
     def tearDown(self):
         if self.view:
@@ -33,8 +33,8 @@ class TestVimModelines(DeferrableTestCase):
             self.view.window().run_command('close_file')
 
         # restore old settings
+        self.settings.set('apply_on_save', self.apply_on_save)
         self.settings.set('apply_on_load', self.apply_on_load)
-        self.settings.set('apply_on_live_edits', self.apply_on_live_edits)
         self.settings.get('line_count', self.line_count)
 
     def setText(self, string):
@@ -48,61 +48,39 @@ class TestVimModelines(DeferrableTestCase):
     def toggle_helper(self, true_flags, false_flags, variable):
         '''Tests vim flags effects on settings to a given ST variable'''
 
-        def condition_set():
+        def variable_set():
             return self.view.settings().get(variable)
-
-        def condition_unset():
-            return not condition_set()
 
         for (true_flag, false_flag) in zip(true_flags, false_flags):
             self.setText('# vim: set {}:'.format(true_flag))
-            yield condition_set()
-            self.assertTrue(condition_set())
+            self.apply()
+            self.assertTrue(variable_set())
 
             self.setText('# vim: set {}:'.format(false_flag))
-            yield condition_unset()
-            self.assertTrue(condition_unset())
+            self.apply()
+            self.assertTrue(not variable_set())
+
+    def apply(self):
+        self.view.window().run_command('vim_modelines_apply')
 
     ###########################################################################
 
-    def test_initial_settings_are_sane(self):
+    def test_initial_view_settings_are_sane(self):
         '''Ensure tab_size isn't suggestively invalid at 19 or 79'''
         self.assertNotEqual(19, self.view.settings().get('tab_size'))
         self.assertNotEqual(79, self.view.settings().get('tab_size'))
 
-    def test_setting_tab_size1(self):
-        self.settings.set('apply_on_live_edits', True)
-
-        def condition():
-            return 19 == self.view.settings().get('tab_size')
-
+    def test_setting_tab_size(self):
         self.setText('# vim: set ts=19:')
-        yield condition
-        self.assertTrue(condition())
-
-    def test_setting_tab_size2(self):
-        self.settings.set('apply_on_live_edits', True)
-
-        def condition():
-            return 19 == self.view.settings().get('tab_size')
-
-        self.setText('# vim: set tabstop=19:')
-        yield condition
-        self.assertTrue(condition())
+        self.apply()
+        self.assertEqual(19, self.view.settings().get('tab_size'))
 
     def test_setting_tab_size_with_cascade(self):
-        self.settings.set('apply_on_live_edits', True)
-
-        def condition():
-            return 79 == self.view.settings().get('tab_size')
-
         self.setText('# vim: set ts=19:\n# vim: set ts=79:')
-        yield condition
-        self.assertTrue(condition())
+        self.apply()
+        self.assertEqual(79, self.view.settings().get('tab_size'))
 
     def test_setting_line_endings(self):
-        self.settings.set('apply_on_live_edits', True)
-
         cases = (('ff', 'mac', 'cr'),
                  ('ff', 'dos', 'windows'),
                  ('ff', 'unix', 'unix'),
@@ -111,12 +89,10 @@ class TestVimModelines(DeferrableTestCase):
                  ('fileformat', 'unix', 'unix'))
 
         for (attr, value, expected_sublime_value) in cases:
-            condition = lambda: expected_sublime_value == \
-                                self.view.line_endings().lower()
-
             self.setText('# vim: set {}={}:'.format(attr, value))
-            yield condition
-            self.assertTrue(condition())
+            self.apply()
+            self.assertEqual(expected_sublime_value,
+                             self.view.line_endings().lower())
 
     def test_setting_and_unsetting_line_numbers(self):
         self.toggle_helper(['number', 'nu'],
@@ -150,43 +126,28 @@ class TestVimModelines(DeferrableTestCase):
         self.view = sublime.active_window().open_file(f)
         yield lambda: not self.view.is_loading()
 
-        def condition():
-            return 19 == self.view.settings().get('tab_size')
-
-        yield condition
-        self.assertTrue(condition())
+        self.apply()
+        self.assertEqual(19, self.view.settings().get('tab_size'))
 
     def test_header_at_edge_of_bounds(self):
-        self.settings.set('apply_on_live_edits', True)
-
         lines = ['Line #{}\n'.format(i)
                  for i in range(1, self.line_count)]
         lines.append('# vim: set ts=19:')
 
-        def condition():
-            return 19 == self.view.settings().get('tab_size')
-
         self.setText(''.join(lines))
-        yield condition
+        self.apply()
         self.assertEqual(19, self.view.settings().get('tab_size'))
 
     def test_footer_at_end_of_bounds(self):
-        self.settings.set('apply_on_live_edits', True)
-
         lines = ['Line #{}\n'.format(i)
                  for i in range(1, self.line_count * 3)]
         lines.append('# vim: set ts=19:')
 
-        def condition():
-            return 19 == self.view.settings().get('tab_size')
-
         self.setText(''.join(lines))
-        yield condition
-        self.assertTrue(condition())
+        self.apply()
+        self.assertEqual(19, self.view.settings().get('tab_size'))
 
     def test_footer_at_edge_of_bounds(self):
-        self.settings.set('apply_on_live_edits', True)
-
         lines = ['Line #{}'.format(i)
                  for i in range(1, self.line_count * 2)]
 
@@ -196,48 +157,34 @@ class TestVimModelines(DeferrableTestCase):
                      for i in range(self.line_count * 2 + 1,
                                     self.line_count * 3))
 
-        def condition():
-            return 19 == self.view.settings().get('tab_size')
+        self.setText('\n'.join(lines))
+        self.apply()
+        self.assertEqual(19, self.view.settings().get('tab_size'))
+
+    def test_footer_out_of_bounds(self):
+        lines = ['Line #{}'.format(i)
+                 for i in range(1, self.line_count * 2)]
+        lines.append('# vim: set ts=19:')
+        lines.extend('Line #{}'.format(i)
+                     for i in range(self.line_count * 2 + 1,
+                                    self.line_count * 3 + 1))
+
+        current_tab_size = self.view.settings().get('tab_size')
 
         self.setText('\n'.join(lines))
-        yield condition
-        self.assertTrue(condition())
+        self.apply()
+        self.assertNotEqual(19, self.view.settings().get('tab_size'))
 
-    # def test_footer_out_of_bounds(self):
-    #     self.settings.set('apply_on_live_edits', True)
+    def test_header_out_of_bounds(self):
+        lines = ['Line #{}'.format(i)
+                 for i in range(1, self.line_count + 1)]
+        lines.append('vim: set ts=19')
+        lines.extend('Line #{}'.format(i)
+                     for i in range(self.line_count + 2,
+                                    self.line_count * 3 + 1))
 
-    #     lines = ['Line #{}'.format(i)
-    #              for i in range(1, self.line_count * 2)]
+        current_tab_size = self.view.settings().get('tab_size')
 
-    #     lines.append('# vim: set ts=19:')
-
-    #     lines.extend('Line #{}'.format(i)
-    #                  for i in range(self.line_count * 2 + 1,
-    #                                 self.line_count * 3 + 1))
-
-    #     current_tab_size = self.view.settings().get('tab_size')
-
-    #     def condition():
-    #         return 19 == self.view.settings().get('tab_size')
-
-    #     self.setText('\n'.join(lines))
-    #     yield 6000
-    #     yield condition
-    #     self.assertTrue(condition())
-
-    # def test_header_out_of_bounds(self):
-    #     self.settings.set('apply_on_live_edits', True)
-
-    #     lines = ['Line #{}\n'.format(i)
-    #              for i in range(1, self.line_count + 1)]
-    #     lines.append('vim: set ts=19')
-
-    #     current_tab_size = self.view.settings().get('tab_size')
-
-    #     def condition():
-    #         return 19 == self.view.settings().get('tab_size')
-
-    #     # this needs to timeout, as we don't want a change to occur
-    #     self.setText(''.join(lines))
-    #     yield condition
-    #     self.assertTrue(condition())
+        self.setText('\n'.join(lines))
+        self.apply()
+        self.assertNotEqual(19, self.view.settings().get('tab_size'))
