@@ -2,6 +2,7 @@
 # vim: set ts=4 sw=4 et fileencoding=utf-8:
 
 from os import path
+from tempfile import NamedTemporaryFile
 from unittesting import DeferrableTestCase
 import sublime
 
@@ -27,15 +28,15 @@ class TestVimModelines(DeferrableTestCase):
         self.apply_on_save = self.settings.get('apply_on_save')
 
     def tearDown(self):
+        # restore old settings
+        self.settings.set('apply_on_save', self.apply_on_save)
+        self.settings.set('apply_on_load', self.apply_on_load)
+        self.settings.set('line_count', self.line_count)
+
         if self.view:
             self.view.set_scratch(True)
             self.view.window().focus_view(self.view)
             self.view.window().run_command('close_file')
-
-        # restore old settings
-        self.settings.set('apply_on_save', self.apply_on_save)
-        self.settings.set('apply_on_load', self.apply_on_load)
-        self.settings.get('line_count', self.line_count)
 
     def setText(self, string):
         self.view.run_command('select_all')
@@ -128,6 +129,39 @@ class TestVimModelines(DeferrableTestCase):
 
         self.apply()
         self.assertEqual(19, self.view.settings().get('tab_size'))
+
+    def test_apply_on_save(self):
+        self.settings.set('apply_on_save', True)
+
+        self.view.set_scratch(True)
+        self.view.window().focus_view(self.view)
+        self.view.window().run_command('close_file')
+
+        with NamedTemporaryFile() as f:
+            f.write(bytes('temp', 'utf-8'))
+            f.close()
+
+            self.view = sublime.active_window().open_file(f.name)
+            yield lambda: not self.view.is_loading()
+
+            self.setText('# vim: set ts=19:')
+            self.view.run_command('save')
+            yield lambda: self.view.settings().get('tab_size') == 19
+
+            self.assertEqual(19, self.view.settings().get('tab_size'))
+
+    def test_zero_line_count(self):
+        self.settings.set('line_count', 0)
+
+        self.setText('# vim: set ts=19:')
+        self.apply()
+        self.assertNotEqual(19, self.view.settings().get('tab_size'))
+
+    def test_skip_if_scratch(self):
+        self.view.set_scratch(True)
+        self.setText('# vim: set ts=19:')
+        self.apply()
+        self.assertNotEqual(19, self.view.settings().get('tab_size'))
 
     def test_header_at_edge_of_bounds(self):
         lines = ['Line #{}\n'.format(i)

@@ -29,10 +29,10 @@ def plugin_unloaded():
     print('Unloaded {}'.format(PLUGIN_NAME))
 
 
-class VimModelines(sublime_plugin.EventListener):
-    '''Event listener to invoke the command on load & save'''
-
-    def __init__(self):
+class Common():
+    '''Shared functionality between plugins'''
+    def __init__(self, *args):
+        super().__init__(*args)
         self.__settings = None
 
     @property
@@ -42,8 +42,9 @@ class VimModelines(sublime_plugin.EventListener):
             self.__settings = sublime.load_settings(SETTINGS_FILE)
         return self.__settings
 
-    def description(self):
-        return __doc__.split('\n')[0]
+
+class VimModelines(Common, sublime_plugin.EventListener):
+    '''Event listener to invoke the command on load & save'''
 
     def on_load(self, view):
         if self.settings.get('apply_on_load', True):
@@ -56,28 +57,12 @@ class VimModelines(sublime_plugin.EventListener):
 ###############################################################################
 
 
-class VimModelinesApplyCommand(sublime_plugin.WindowCommand):
+class VimModelinesApplyCommand(Common, sublime_plugin.WindowCommand):
     '''Command containing the main logic'''
 
     __modeline_RX = re.compile('vim(?:\d*):\s*(?:set)?\s*(.*)$')
     __attr_sep_RX = re.compile('[: ]')
     __attr_kvp_RX = re.compile('([^=]+)=?([^=]*)')
-
-    def __init__(self, window):
-        super().__init__(window)
-        self.__settings = None
-
-    @property
-    def settings(self):
-        '''plugin settings, lazy loading for API readiness'''
-        if self.__settings is None:
-            self.__settings = sublime.load_settings(SETTINGS_FILE)
-        return self.__settings
-
-    def description(self):
-        return __doc__.split('\n')[0]
-
-    ###########################################################################
 
     def run(self):
         view = self.window.active_view()
