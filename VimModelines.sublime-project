@@ -9,7 +9,7 @@
 	[
 		{
 			"name": "Test Current Package",
-			"target": "unit_testing_current_package",
+			"target": "unit_testing_current_package_coverage",
 		}
 	]
 }
