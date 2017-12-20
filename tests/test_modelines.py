@@ -116,6 +116,26 @@ class TestVimModelines(DeferrableTestCase):
                            ['noexpandtab', 'noet'],
                            'translate_tabs_to_spaces')
 
+    def test_setting_fileencoding(self):
+        self.setText('# vim: set fenc=koi8-r:')
+        self.apply()
+        self.assertEqual('Cyrillic (KOI8-R)', self.view.encoding())
+
+        self.setText('# vim: set fileencoding=koi8-u:')
+        self.apply()
+        self.assertEqual('Cyrillic (KOI8-U)', self.view.encoding())
+
+        self.setText('# vim: set fileencoding=foo:')
+        self.apply()
+        self.assertEqual('Cyrillic (KOI8-U)', self.view.encoding())
+        self.assertEqual('Unsupported modeline encoding',
+                         self.view.get_status('VimModelines'))
+
+    def test_invalid_setting_is_ignored(self):
+        self.setText('# vim: set foo=bar ts=19:')
+        self.apply()
+        self.assertEqual(19, self.view.settings().get('tab_size'))
+
     def test_apply_on_load(self):
         self.settings.set('apply_on_load', True)
 
@@ -126,9 +146,23 @@ class TestVimModelines(DeferrableTestCase):
         f = path.join(path.dirname(__file__), 'assets', 'open_file_test.txt')
         self.view = sublime.active_window().open_file(f)
         yield lambda: not self.view.is_loading()
+        yield lambda: self.view.settings().get('tab_size') == 19
 
-        self.apply()
         self.assertEqual(19, self.view.settings().get('tab_size'))
+
+    def test_apply_on_load_disabled(self):
+        self.settings.set('apply_on_load', False)
+
+        self.view.set_scratch(True)
+        self.view.window().focus_view(self.view)
+        self.view.window().run_command('close_file')
+
+        f = path.join(path.dirname(__file__), 'assets', 'open_file_test.txt')
+        self.view = sublime.active_window().open_file(f)
+        yield lambda: not self.view.is_loading()
+        yield lambda: self.view.settings().get('tab_size') != 19
+
+        self.assertNotEqual(19, self.view.settings().get('tab_size'))
 
     def test_apply_on_save(self):
         self.settings.set('apply_on_save', True)
@@ -149,6 +183,26 @@ class TestVimModelines(DeferrableTestCase):
             yield lambda: self.view.settings().get('tab_size') == 19
 
             self.assertEqual(19, self.view.settings().get('tab_size'))
+
+    def test_apply_on_save_disabled(self):
+        self.settings.set('apply_on_save', False)
+
+        self.view.set_scratch(True)
+        self.view.window().focus_view(self.view)
+        self.view.window().run_command('close_file')
+
+        with NamedTemporaryFile() as f:
+            f.write(bytes('temp', 'utf-8'))
+            f.close()
+
+            self.view = sublime.active_window().open_file(f.name)
+            yield lambda: not self.view.is_loading()
+
+            self.setText('# vim: set ts=19:')
+            self.view.run_command('save')
+            yield lambda: self.view.settings().get('tab_size') != 19
+
+            self.assertNotEqual(19, self.view.settings().get('tab_size'))
 
     def test_zero_line_count(self):
         self.settings.set('line_count', 0)

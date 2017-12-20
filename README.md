@@ -39,6 +39,7 @@ preference for a width of 2. This will override your default settings if
 | autoindent, ai     | Automatic indentation           | `auto_indent = True`  |
 | noautoindent, noai | Disable automatic indentation   | `auto_indent = False` |
 | fileformat, ff     | Set line endings (dos, mac, unix) | `set_line_endings()` |
+| fileencoding, fenc | Set file encoding (utf-8, ...)       | `set_encoding()` |
 | tabstop, ts        | # of columns for each tab character       | `tab_size`  |
 | shiftwidth, sw     | # of columns for indent operation         | **ignored** |
 | softtab, st        | # of columns for tab key (space & tab)    | **ignored** |
@@ -48,6 +49,47 @@ preference for a width of 2. This will override your default settings if
 | nonumber, nonu     | Hide line numbers              | `line_numbers = False` |
 | wrap               | Enable word wrap                  | `word_wrap = True`  |
 | nowrap             | Disable word wrap                 | `word_wrap = False` |
+
+## Supported File Encodings
+
+VimModelines will set the encoding as specified, but will not convert it. The
+following are the supported Sublime Text encodings and their mappings to Vim.
+
+| Vim Encoding  | Sublime Text Encoding           |
+| ------------- | ------------------------------- |
+| latin1        | Western (Windows 1252)          |
+| koi8-r        | Cyrillic (KOI8-R)               |
+| koi8-u        | Cyrillic (KOI8-U)               |
+| macroman      | Western (Mac Roman)             |
+| iso-8859-1    | Western (ISO 8859-1)            |
+| iso-8859-2    | Central European (ISO 8859-2)   |
+| iso-8859-3    | Western (ISO 8859-3)            |
+| iso-8859-4    | Baltic (ISO 8859-4)             |
+| iso-8859-5    | Cyrillic (ISO 8859-5)           |
+| iso-8859-6    | Arabic (ISO 8859-6)             |
+| iso-8859-7    | Greek (ISO 8859-7)              |
+| iso-8859-8    | Hebrew (ISO 8859-8)             |
+| iso-8859-9    | Turkish (ISO 8859-9)            |
+| iso-8859-10   | Nordic (ISO 8859-10)            |
+| iso-8859-13   | Estonian (ISO 8859-13)          |
+| iso-8859-14   | Celtic (ISO 8859-14)            |
+| iso-8859-15   | Western (ISO 8859-15)           |
+| iso-8859-16   | Romanian (ISO 8859-16)          |
+| cp437         | DOS (CP 437)                    |
+| cp866         | Cyrillic (Windows 866)          |
+| cp1250        | Central European (Windows 1250) |
+| cp1251        | Cyrillic (Windows 1251)         |
+| cp1252        | Western (Windows 1252)          |
+| cp1253        | Greek (Windows 1253)            |
+| cp1254        | Turkish (Windows 1254)          |
+| cp1255        | Hebrew (Windows 1255)           |
+| cp1256        | Arabic (Windows 1256)           |
+| cp1257        | Baltic (Windows 1257)           |
+| cp1258        | Vietnamese (Windows 1258)       |
+| utf-8         | utf-8 					      |
+| ucs-2le       | utf-16 le 				      |
+| utf-16        | utf-16 be 				      |
+| utf-16le      | utf-16 le 				      |
 
 ## Requirements
 

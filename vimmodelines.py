@@ -5,6 +5,7 @@ GitHub: https://github.com/pestilence669/VimModelines
 '''
 
 from itertools import chain
+from .lib.encoding import ENCODING_MAP
 import re
 import sublime
 import sublime_plugin
@@ -54,6 +55,7 @@ class VimModelines(Common, sublime_plugin.EventListener):
         if self.settings.get('apply_on_save', True):
             view.window().run_command('vim_modelines_apply')
 
+
 ###############################################################################
 
 
@@ -69,6 +71,7 @@ class VimModelinesApplyCommand(Common, sublime_plugin.WindowCommand):
         if view.is_scratch():
             return
 
+        view.erase_status(PLUGIN_NAME)
         line_count = self.settings.get('line_count', 5)
 
         # flatten each command or key/value pair and only keep the most recent
@@ -103,6 +106,13 @@ class VimModelinesApplyCommand(Common, sublime_plugin.WindowCommand):
                 view.settings().set('line_numbers', True)
             elif attr in ('nonumber', 'nonu'):
                 view.settings().set('line_numbers', False)
+            elif attr in ('fenc', 'fileencoding'):
+                target_encoding = ENCODING_MAP.get(value.lower())
+                if not target_encoding:
+                    view.set_status(PLUGIN_NAME,
+                                    'Unsupported modeline encoding')
+                else:
+                    view.set_encoding(target_encoding)
 
     @staticmethod
     def header_and_footer(view, line_count):

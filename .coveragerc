@@ -1,6 +1,6 @@
 [run]
 	omit = /*/tests/*
-	branch = False
+	branch = True
 
 [report]
 	ignore_errors = True
