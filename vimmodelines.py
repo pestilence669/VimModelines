@@ -112,9 +112,8 @@ class VimModelinesApplyCommand(Common, sublime_plugin.WindowCommand):
                     view.set_status(PLUGIN_NAME,
                                     'Unsupported modeline encoding')
                 else:
-                    if view.encoding() != target_encoding:
-                        view.run_command('set_encoding',
-                                         {'encoding': target_encoding})
+                    view.run_command('set_encoding',
+                                     {'encoding': target_encoding})
 
     @staticmethod
     def header_and_footer(view, line_count):
