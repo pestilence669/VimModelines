@@ -62,9 +62,18 @@ class VimModelines(Common, sublime_plugin.EventListener):
 class VimModelinesApplyCommand(Common, sublime_plugin.WindowCommand):
     '''Command containing the main logic'''
 
-    __modeline_RX = re.compile('vim(?:\d*):\s*(?:set)?\s*(.*)$')
-    __attr_sep_RX = re.compile('[: ]')
-    __attr_kvp_RX = re.compile('([^=]+)=?([^=]*)')
+    __modeline_RX = re.compile(r'''
+        (?:^vim?                # begin line with either "vi" or "vim"
+            | \s(?:vim?|ex))    # ... or whitespace then "vi", "vim", or "ex"
+        (?:\d*):                # optional version digits, closed with ":"
+        \s*                     # optional whitespace after ~"vim700:"
+        (?:set?[ ])?            # optional "set" or "se" followed by a space
+        ([^:]*):?               # -> vim options until possible ":"
+        .*$
+    ''', re.VERBOSE)
+
+    __attr_sep_RX = re.compile(r'[: ]')
+    __attr_kvp_RX = re.compile(r'([^=]+)=?([^=]*)')
 
     def run(self):
         view = self.window.active_view()

@@ -81,6 +81,53 @@ class TestVimModelines(DeferrableTestCase):
         self.apply()
         self.assertEqual(79, self.view.settings().get('tab_size'))
 
+    def test_modeline_prefixes_with_leading_space(self):
+        self.setText('# vim: set ts=79:')
+        self.apply()
+        self.assertEqual(79, self.view.settings().get('tab_size'))
+        self.setText('# vi: set ts=69:')
+        self.apply()
+        self.assertEqual(69, self.view.settings().get('tab_size'))
+        self.setText('# ex: set ts=59:')
+        self.apply()
+        self.assertEqual(59, self.view.settings().get('tab_size'))
+
+    def test_modeline_prefixes_without_leading_space(self):
+        self.setText('#vim: set ts=79:')
+        self.apply()
+        self.assertNotEqual(79, self.view.settings().get('tab_size'))
+        self.setText('#vi: set ts=69:')
+        self.apply()
+        self.assertNotEqual(69, self.view.settings().get('tab_size'))
+        self.setText('#ex: set ts=59:')
+        self.apply()
+        self.assertNotEqual(59, self.view.settings().get('tab_size'))
+
+    def test_modeline_prefixes_beginning_of_line(self):
+        self.setText('vim: set ts=79:')
+        self.apply()
+        self.assertEqual(79, self.view.settings().get('tab_size'))
+        self.setText('vi: set ts=69:')
+        self.apply()
+        self.assertEqual(69, self.view.settings().get('tab_size'))
+        self.setText('ex: set ts=59:')
+        self.apply()
+        self.assertNotEqual(59, self.view.settings().get('tab_size'))
+
+    def test_modeline_set_alternatives(self):
+        self.setText('vim:se ts=79:')
+        self.apply()
+        self.assertEqual(79, self.view.settings().get('tab_size'))
+        self.setText('# vi: se ts=69:')
+        self.apply()
+        self.assertEqual(69, self.view.settings().get('tab_size'))
+        self.setText('# ex: sets=59:')
+        self.apply()
+        self.assertNotEqual(59, self.view.settings().get('tab_size'))
+        self.setText('# ex:se ts=49: ts=39')
+        self.apply()
+        self.assertEqual(49, self.view.settings().get('tab_size'))
+
     def test_setting_line_endings(self):
         cases = (('ff', 'mac', 'cr'),
                  ('ff', 'dos', 'windows'),
