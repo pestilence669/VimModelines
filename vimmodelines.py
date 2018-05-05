@@ -68,8 +68,7 @@ class VimModelinesApplyCommand(Common, sublime_plugin.WindowCommand):
         (?:\d*):                # optional version digits, closed with ":"
         \s*                     # optional whitespace after ~"vim700:"
         (?:set?[ ])?            # optional "set" or "se" followed by a space
-        ([^:]*):?               # -> vim options until possible ":"
-        .*$
+        (.*)$                   # vim options
     ''', re.VERBOSE)
 
     __attr_sep_RX = re.compile(r'[: ]')
