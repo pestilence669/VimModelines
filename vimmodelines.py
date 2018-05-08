@@ -9,7 +9,6 @@ from .lib.encoding import ENCODING_MAP
 import re
 import sublime
 import sublime_plugin
-import sys
 
 
 PLUGIN_NAME = 'VimModelines'
