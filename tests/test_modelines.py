@@ -127,7 +127,55 @@ class TestVimModelines(DeferrableTestCase):
         self.setText('# ex:ts=49:ts=39')
         self.apply()
         self.assertEqual(39, self.view.settings().get('tab_size'))
-        # note: terminating set:<options>: is not supported at the moment
+        self.setText('# ex:set ts=29:ts=19')
+        self.apply()
+        self.assertEqual(29, self.view.settings().get('tab_size'))
+
+    def test_modeline_type2_terminates_on_colon(self):
+        self.setText('# ex:set ts=79:ts=69')
+        self.apply()
+        self.assertEqual(79, self.view.settings().get('tab_size'))
+        self.setText('vim:set ts=59:ts=49')
+        self.apply()
+        self.assertEqual(59, self.view.settings().get('tab_size'))
+
+    def test_modeline_type2_accepts_any_whitespace_before_set(self):
+        self.setText('# ex: \t se ts=79:')
+        self.apply()
+        self.assertEqual(79, self.view.settings().get('tab_size'))
+
+    def test_modeline_type2_only_accepts_one_space_after_set(self):
+        self.setText('# ex: se  ts=79:')
+        self.apply()
+        self.assertNotEqual(79, self.view.settings().get('tab_size'))
+
+    def test_modeline_type2_accepts_any_whitespace_between_opts(self):
+        self.setText('# vim: set ts=79 \t ts=69:')
+        self.apply()
+        self.assertEqual(69, self.view.settings().get('tab_size'))
+
+    def test_modeline_type2_requires_colon(self):
+        self.setText('# vim:set ts=79')
+        self.apply()
+        self.assertNotEqual(79, self.view.settings().get('tab_size'))
+
+    def test_modeline_type1_does_not_terminate_on_colon(self):
+        self.setText('# ex:ts=79:ts=69')
+        self.apply()
+        self.assertEqual(69, self.view.settings().get('tab_size'))
+        self.setText('vim:ts=59:ts=49')
+        self.apply()
+        self.assertEqual(49, self.view.settings().get('tab_size'))
+
+    def test_modeline_type1_accepts_any_whitespace_preceding_opts(self):
+        self.setText('# vim: \t  ts=79')
+        self.apply()
+        self.assertEqual(79, self.view.settings().get('tab_size'))
+
+    def test_modeline_type1_accepts_any_whitespace_between_opts(self):
+        self.setText('# vim: ts=79 \t ts=69')
+        self.apply()
+        self.assertEqual(69, self.view.settings().get('tab_size'))
 
     def test_setting_line_endings(self):
         cases = (('ff', 'mac', 'cr'),

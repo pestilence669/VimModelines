@@ -68,15 +68,17 @@ class VimModelinesApplyCommand(Common, sublime_plugin.WindowCommand):
     '''Command containing the main logic'''
 
     __modeline_RX = re.compile(r'''
-        (?:^vim?                # begin line with either "vi" or "vim"
-            | \s(?:vim?|ex))    # ... or whitespace then "vi", "vim", or "ex"
-        (?:\d*):                # optional version digits, closed with ":"
-        \s*                     # optional whitespace after ~"vim700:"
-        (?:set?[ ])?            # optional "set" or "se" followed by a space
-        (.*)$                   # vim options
+        (?:^vim?                # begin line with either vi or vim
+            | \s(?:vim? | ex))  # ... or whitespace then vi, vim, or ex
+        (?:\d*):                # optional version digits, closed with :
+        \s*                     # optional whitespace after ~vim700:
+        (?:                     # alternation of type 1 & 2 modelines
+            (?:set?[ ])([^ ].*):.*$ # type 2: optional set or se, spc, opts, :
+            | (?!set?[ ])([^ ].*)$  # type 1: everything following
+        )
     ''', re.VERBOSE)
 
-    __attr_sep_RX = re.compile(r'[: ]')
+    __attr_sep_RX = re.compile(r'[:\s]')
     __attr_kvp_RX = re.compile(r'([^=]+)=?([^=]*)')
 
     def run(self):
@@ -151,7 +153,7 @@ class VimModelinesApplyCommand(Common, sublime_plugin.WindowCommand):
         match = cls.__modeline_RX.search(line)
 
         if match:
-            modeline, = match.groups()
+            modeline = ''.join(m for m in match.groups() if m)
             attrs = [cls.__attr_kvp_RX.match(attr).groups()
                      for attr in filter(bool,
                                         cls.__attr_sep_RX.split(modeline))]
