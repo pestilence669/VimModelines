@@ -19,11 +19,10 @@ SETTINGS_FILE = 'VimModelines.sublime-settings'
 def plugin_loaded():
     print('Loaded {}'.format(PLUGIN_NAME))
 
-    # call on_load(), since files will probably load before the plugin (async)
-    listener = sys.modules[__name__].plugins[0]
+    # call on_load(), since files may load before the plugin (async)
     for w in sublime.windows():
         for g in range(w.num_groups()):
-            listener.on_load(w.active_view_in_group(g))
+            VimModelines.instance.on_load(w.active_view_in_group(g))
 
 
 def plugin_unloaded():
@@ -46,6 +45,12 @@ class Common():
 
 class VimModelines(Common, sublime_plugin.EventListener):
     '''Event listener to invoke the command on load & save'''
+
+    instance = None  # last loaded instance (due to 3.1)
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        VimModelines.instance = self
 
     def on_load(self, view):
         if self.settings.get('apply_on_load', True):
