@@ -15,6 +15,6 @@ test_script:
 
 after_test:
     - "SET PYTHON=C:\Python33"
-    - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+    - "SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%"
     - pip install codecov
     - codecov
