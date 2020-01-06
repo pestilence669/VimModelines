@@ -6,6 +6,7 @@ GitHub: https://github.com/pestilence669/VimModelines
 
 from itertools import chain
 from .lib.encoding import ENCODING_MAP
+from .lib.filetype import FILETYPE_MAP
 import re
 import sublime
 import sublime_plugin
@@ -79,6 +80,7 @@ class VimModelinesApplyCommand(Common, sublime_plugin.WindowCommand):
 
     __attr_sep_RX = re.compile(r'[:\s]')
     __attr_kvp_RX = re.compile(r'([^=]+)=?([^=]*)')
+    __syntax_map = None
 
     def run(self):
         view = self.window.active_view()
@@ -128,6 +130,17 @@ class VimModelinesApplyCommand(Common, sublime_plugin.WindowCommand):
                 else:
                     view.run_command('set_encoding',
                                      {'encoding': target_encoding})
+            elif attr in ('filetype', 'ft'):
+                # TODO: allow user to set vim -> package/syntax mapping in
+                # settings.
+                # package names will have path delimiters, so you can
+                # figure out if a name is a package or syntax
+                sublime_syntax = FILETYPE_MAP.get(value.lower())
+                package_path = self.get_syntax_packages().get(sublime_syntax)
+
+                if package_path:
+                    view.settings().set('syntax', package_path +
+                                        '.sublime-syntax')
 
     @staticmethod
     def header_and_footer(view, line_count):
@@ -158,3 +171,32 @@ class VimModelinesApplyCommand(Common, sublime_plugin.WindowCommand):
                                         cls.__attr_sep_RX.split(modeline))]
 
             return attrs
+
+    @classmethod
+    def get_syntax_packages(cls):
+        '''Inspect sublime's installed syntax plugins and build a dictionary'''
+
+        if not cls.__syntax_map:
+            syntax_map = {}
+            for package in sublime.find_resources('*.sublime-syntax'):
+                # Find the first scope entry, and ignore "hidden" syntax files.
+                # Not using yaml parsers for avoiding that dependency and
+                # more speed.
+
+                scope = None
+                for line in sublime.load_resource(package).splitlines():
+                    line = line.strip()
+                    if line.startswith('hidden:'):
+                        if line[len('hidden:'):].strip().startswith('True'):
+                            break
+
+                    if not scope and line.startswith('scope:'):
+                        scope = line[len('scope:'):].strip()
+
+                # TODO: What if multiple packages implement a syntax?
+                if scope:
+                    syntax_map[scope] = package[:-len('.sublime-syntax')]
+
+            cls.__syntax_map = syntax_map
+
+        return cls.__syntax_map
