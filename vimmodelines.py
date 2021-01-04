@@ -71,8 +71,8 @@ class VimModelinesCreateCommand(Common, sublime_plugin.TextCommand):
             return
 
         settings = view.settings()
-        ts = settings.get('tabsettingsize')
-        et = settings.get('translate_tabs_tosettingspaces')
+        ts = settings.get('tab_size')
+        et = settings.get('translate_tabs_to_spaces')
         ai = settings.get('auto_indent')
         ff = view.line_endings()
         ww = settings.get('word_wrap')
