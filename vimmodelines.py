@@ -62,9 +62,47 @@ class VimModelines(Common, sublime_plugin.EventListener):
 
 ###############################################################################
 
+class VimModelinesCreateCommand(Common, sublime_plugin.TextCommand):
+    '''Command containing the **create** main logic'''
+
+    def run(self, edit):
+        view = self.view
+        if view.is_scratch():
+            return
+
+        settings = view.settings()
+        ts = settings.get('tab_size')
+        et = settings.get('translate_tabs_to_spaces')
+        ai = settings.get('auto_indent')
+        ff = view.line_endings()
+        ww = settings.get('word_wrap')
+        nu = settings.get('line_numbers')
+        fe = view.encoding()
+
+        _fe = None
+        for vimenc, stenc in ENCODING_MAP.items():
+            if fe == stenc:
+                _fe = vimenc
+                break
+
+        if ff == 'windows':
+            _ff = 'dos'
+        elif ff == 'CR':
+            _ff = 'mac'
+        elif ff == 'Unix':
+            _ff = 'unix'
+        else:
+            _ff = ff
+
+        # vim: set encoding=utf-8 tabstop=4 softtabstop=4 shiftwidth=4 expandtab
+        ml = 'vim: set {}{} ts={} sts={} sw={} {} ff={} {} {} :'.format('enc=' + _fe + ' ' if _fe else '', 'et' if et else 'noet', ts, ts, ts, 'ai' if ai else 'noai', _ff, 'nu' if nu else 'nonu', 'wrap' if ww else 'nowrap')
+
+        for region in view.sel():
+            view.insert(edit, region.begin(), ml)
+
 
 class VimModelinesApplyCommand(Common, sublime_plugin.WindowCommand):
-    '''Command containing the main logic'''
+    '''Command containing the **apply** main logic'''
 
     __modeline_RX = re.compile(r'''
         (?:^vim?                # begin line with either vi or vim
