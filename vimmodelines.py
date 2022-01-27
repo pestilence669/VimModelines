@@ -138,7 +138,11 @@ class VimModelinesApplyCommand(Common, sublime_plugin.WindowCommand):
                 sublime_syntax = FILETYPE_MAP.get(value.lower())
                 package_path = self.get_syntax_packages().get(sublime_syntax)
 
-                if package_path:
+                if not package_path:
+                    view.set_status(PLUGIN_NAME,
+                                    'Unsupported filetype')
+                    view.settings().erase('syntax')
+                else:
                     view.settings().set('syntax', package_path +
                                         '.sublime-syntax')
 
