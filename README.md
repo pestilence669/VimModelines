@@ -32,6 +32,8 @@ preference for a width of 2. This will override your default settings if
 
 ![Screenshot 1](img/ss1.png)
 
+https://github.com/github/linguist/blob/master/lib/linguist/languages.yml
+
 ## Parsed Attributes
 
 | Attribute          | Description                               | Mapping     |
